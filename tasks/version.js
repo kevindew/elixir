@@ -35,18 +35,19 @@ Elixir.extend('version', function(src, buildPath) {
 
         // We need to remove the publicPath from the output base to get the
         // correct prefix path.
-        var unixPrefix = paths.output.baseDir;
-        if (path.sep !== '/') {
-            unixPrefix = unixPrefix.split(path.sep).join('/');
-        }
-        var filePathPrefix = unixPrefix.replace(publicPath, '') + '/';
+        var filePathPrefix = urlPrefix(paths.output.baseDir, publicPath);
 
         return (
             gulp.src(paths.src.path, { base: './' + publicPath })
             .pipe(gulp.dest(paths.output.baseDir))
             .pipe(files)
             .pipe(rev())
-            .pipe(revReplace({prefix: filePathPrefix}))
+            .pipe(revReplace({
+                // get a double slash issue with the prefix option
+                modifyReved: function(rev) {
+                    return filePathPrefix + rev;
+                }
+            }))
             .pipe(gulp.dest(paths.output.baseDir))
             .pipe(rev.manifest())
             .pipe(gulp.dest(paths.output.baseDir))
@@ -128,4 +129,25 @@ var copyMaps = function(src, buildPath) {
                 });
         });
     });
+};
+
+/**
+ * Create the url prefix for the revved files
+ *
+ * @param  {string} src
+ * @param  {string} src
+ * @return {string}
+ */
+var urlPrefix = function(outputPath, publicPath) {
+    if (path.sep !== '/') {
+        outputPath = outputPath.split(path.sep).join('/');
+    }
+
+    outputPath = outputPath.replace(publicPath, '') + '/';
+
+    if (outputPath[0] == '/') {
+        outputPath = outputPath.substr(1);
+    }
+
+    return outputPath;
 };
