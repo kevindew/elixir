@@ -8,6 +8,7 @@ var vinylPaths = require('vinyl-paths');
 var parsePath  = require('parse-filepath');
 var publicPath  = Elixir.config.publicPath;
 var revReplace = require('gulp-rev-replace');
+var path = require('path');
 
 
 /*
@@ -34,7 +35,11 @@ Elixir.extend('version', function(src, buildPath) {
 
         // We need to remove the publicPath from the output base to get the
         // correct prefix path.
-        var filePathPrefix = paths.output.baseDir.replace(publicPath, '') + '/';
+        var unixPrefix = paths.output.baseDir;
+        if (path.sep !== '/') {
+            unixPrefix = unixPrefix.split(path.sep).join('/');
+        }
+        var filePathPrefix = unixPrefix.replace(publicPath, '') + '/';
 
         return (
             gulp.src(paths.src.path, { base: './' + publicPath })
